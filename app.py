@@ -67,7 +67,9 @@ def screen_resumes(resume_files, job_description):
         parsed = parse_resume(file_path)
         name = parsed.get("name", Path(file_path).stem)
         
-        job_words = {w.lower() for w in job_description.split()}
+        import re
+        # Use regex to split words, handling punctuation like "Python," correctly
+        job_words = {t.lower() for t in re.findall(r"[A-Za-z0-9#+.]+", job_description)}
         required_skills = [s for s in _SKILL_KEYWORDS if s in job_words]
         skill_match = calculate_skills_match(parsed.get("skills", []), required_skills, [])
         

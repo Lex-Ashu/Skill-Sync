@@ -7,10 +7,18 @@ def generate_explanation(candidate: Dict[str, Any]) -> str:
     lines.append("")
     skills = candidate.get('skills_score', 0) * 100
     lines.append(f"✓ Skills Match: {skills:.1f}% (Weight 40%)")
-    lines.append(f"  - Matched required: {', '.join(candidate.get('matched_required', [])) or 'None'}")
-    lines.append(f"  - Missing required: {', '.join(candidate.get('missing_required', [])) or 'None'}")
-    lines.append(f"  - Matched preferred: {', '.join(candidate.get('matched_preferred', [])) or 'None'}")
-    lines.append(f"  - Missing preferred: {', '.join(candidate.get('missing_preferred', [])) or 'None'}")
+    matched_req = candidate.get('matched_required', [])
+    missing_req = candidate.get('missing_required', [])
+    
+    lines.append(f"  - Matched Skills: {', '.join(matched_req) if matched_req else 'None'}")
+    lines.append(f"  - Missing Skills: {', '.join(missing_req) if missing_req else 'No missing skills'}")
+    
+    # Only show preferred skills if they were actually defined/used
+    matched_pref = candidate.get('matched_preferred', [])
+    missing_pref = candidate.get('missing_preferred', [])
+    if matched_pref or missing_pref:
+        lines.append(f"  - Matched Preferred: {', '.join(matched_pref) if matched_pref else 'None'}")
+        lines.append(f"  - Missing Preferred: {', '.join(missing_pref) if missing_pref else 'No missing skills'}")
     lines.append("")
     exp_score = candidate.get('experience_score', 0) * 100
     lines.append(f"✓ Experience Match: {exp_score:.1f}% (Weight 25%)")

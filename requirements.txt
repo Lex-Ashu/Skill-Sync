@@ -1,0 +1,10 @@
+streamlit
+pdfplumber
+PyPDF2
+python-docx
+# spacy==3.7.2  # optional, parser has fallback
+tqdm
+# sentence-transformers  # removed to avoid heavy torch dependency
+scikit-learn
+numpy
+pandas

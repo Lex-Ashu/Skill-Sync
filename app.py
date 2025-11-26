@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import re
 from pathlib import Path
 
 st.set_page_config(page_title="Skill-Sync: AI Resume Screener", layout="wide")
@@ -48,8 +49,27 @@ st.markdown("""
 def _prepare_resume_text(file_path: str) -> str:
     return extract_text(file_path)
 
+def extract_req_experience(job_description: str) -> str:
+    # Look for patterns like "0-1 Year", "3-5 years", "2+ years"
+    # Handles various dashes (hyphen, en-dash, em-dash)
+    pattern = r"(\d+)(?:\s*[-–]\s*(\d+))?\s*(?:years?|yrs?)"
+    match = re.search(pattern, job_description, re.IGNORECASE)
+    if match:
+        min_exp = match.group(1)
+        max_exp = match.group(2)
+        if max_exp:
+            return f"{min_exp}-{max_exp}"
+        else:
+            # Handle "3+ years" case -> treat as 3-10
+            return f"{min_exp}-10"
+    return "0-100" # Default fallback if no experience mentioned
+
 def screen_resumes(resume_files, job_description):
     job_emb = generate_embedding(job_description)
+    
+    # Extract experience requirement dynamically
+    req_experience = extract_req_experience(job_description)
+    
     candidates = []
     
     progress_bar = st.progress(0)
@@ -67,13 +87,12 @@ def screen_resumes(resume_files, job_description):
         parsed = parse_resume(file_path)
         name = parsed.get("name", Path(file_path).stem)
         
-        import re
         # Use regex to split words, handling punctuation like "Python," correctly
         job_words = {t.lower() for t in re.findall(r"[A-Za-z0-9#+.]+", job_description)}
         required_skills = [s for s in _SKILL_KEYWORDS if s in job_words]
         skill_match = calculate_skills_match(parsed.get("skills", []), required_skills, [])
         
-        exp_match = calculate_experience_match(parsed.get("total_experience_years", 0), "3-5")
+        exp_match = calculate_experience_match(parsed.get("total_experience_years", 0), req_experience)
         edu_match = calculate_education_match(parsed.get("education", []), "bachelor")
         
         resume_text = _prepare_resume_text(file_path)
